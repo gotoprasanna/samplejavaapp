@@ -1,0 +1,34 @@
+pipeline {
+    agent any
+    stages {
+        stage('JOB1 - 1.	Install and configure puppet agent on the slave node') {
+	   steps {
+                echo '1.	Install and configure puppet agent on the slave node..'
+		git url: 'https://github.com/gotoprasanna/samplejavaapp'
+		sh script: '/opt/maven/bin/mvn compile'
+           }
+        }
+        stage('JOB1 - 2.  Push an Ansible configuration on test server to install docker') {
+	   steps {
+                echo '2.	Push an Ansible configuration on test server to install docker..'
+		sh script: '/opt/maven/bin/mvn -P metrics pmd:pmd'
+           }
+	   post {
+               success {
+		   recordIssues enabledForFailure: true, tool: pmdParser(pattern: '**/target/pmd.xml')
+               }
+           }		
+        }
+        stage('3.	Pull the PHP website, and the Dockerfile from the git repo and build and deploy your PHP docker container') {
+	   steps {
+                echo '3.	Pull the PHP website, and the Dockerfile from the git repo and build and deploy your PHP docker container..'
+	        sh script: '/opt/maven/bin/mvn test'
+                 }
+	   post {
+               success {
+                   junit 'target/surefire-reports/*.xml'
+               }
+           }			
+        }
+    }
+}
